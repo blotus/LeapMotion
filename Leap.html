@@ -132,14 +132,33 @@
         var lasthand1;
         var lasthand2;
         var zoom = 1.0;
+        var gesture_id;
+        var oldgesture;
         function handleFrame(frame) {
             //var mydiv = document.getElementById("foo");
             //foo.innerHTML = frame;
-            if (window.lastframe != undefined) {
-                if (frame.id - window.lastframe.id < 15)
+
+            if (frame.gestures.length > 0) {
+                var gesture = frame.gestures[0];
+                if (gesture.state == "start") {
+                    window.gesture_id = gesture.id;
+                    window.oldgesture = gesture;
                     return;
+                }
+                if (gesture.type == "swipe") {
+                    if (gesture.direction[0] > 0) { //to the left 
+                        chart.xAxis[0].setExtremes(chart.xAxis[0].getExtremes().min - 1, chart.xAxis[0].getExtremes().max - 1)  
+                    }
+                    else {
+                        chart.xAxis[0].setExtremes(chart.xAxis[0].getExtremes().min + 1, chart.xAxis[0].getExtremes().max + 1);
+                    }
+                }
             }
-            if (frame.hands.length == 2) {
+            else if (frame.hands.length == 2) {
+                if (window.lastframe != undefined) {
+                    if (frame.id - window.lastframe.id < 15)
+                        return;
+                }
               //  console.log(frame.hands[0].palmVelocity + "|" + frame.hands[1].palmVelocity);
                 // to detect zoom in / out :
                 // leapjs returns (x,y,z) speed in mm/s for each hand
@@ -224,17 +243,6 @@
         controller.loop(handleFrame);
 
 
-
-      
-
-
-
-
-
-        var lastX;
-        var lastY;
-        var mouseDown;
-
         Highcharts.setOptions({
             lang: {
                 resetZoom: ''
@@ -288,34 +296,6 @@
             chart.yAxis[0].setExtremes(yExtremes.dataMin, yExtremes.dataMax);
             window.zoom = 1;
 
-        });
-
-        $('#container').mousemove(function (e) {
-            if (mouseDown == 1) {
-                if (e.pageX > lastX) {
-                    var diff = e.pageX - lastX;
-                    var xExtremes = chart.xAxis[0].getExtremes();
-                    chart.xAxis[0].setExtremes(xExtremes.min - diff, xExtremes.max - diff);
-                }
-                else if (e.pageX < lastX) {
-                    var diff = lastX - e.pageX;
-                    var xExtremes = chart.xAxis[0].getExtremes();
-                    chart.xAxis[0].setExtremes(xExtremes.min + diff, xExtremes.max + diff);
-                }
-
-                if (e.pageY > lastY) {
-                    var ydiff = 1 * (e.pageY - lastY);
-                    var yExtremes = chart.yAxis[0].getExtremes();
-                    chart.yAxis[0].setExtremes(yExtremes.min + ydiff, yExtremes.max + ydiff);
-                }
-                else if (e.pageY < lastY) {
-                    var ydiff = 1 * (lastY - e.pageY);
-                    var yExtremes = chart.yAxis[0].getExtremes();
-                    chart.yAxis[0].setExtremes(yExtremes.min - ydiff, yExtremes.max - ydiff);
-                }
-            }
-            lastX = e.pageX;
-            lastY = e.pageY;
         });
 
 
